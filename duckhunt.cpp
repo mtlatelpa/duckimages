@@ -377,3 +377,5 @@ void deleteDuck(Game *game, Duck *node)
     delete node;
     node = NULL;
 }
+
+//Testing
