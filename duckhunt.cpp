@@ -39,7 +39,6 @@
 #define WINDOW_HEIGHT 600
 
 #define MAX_DUCKS 2
-#define GRAVITY 0.1
 
 #define rnd() (float)rand() / (float)RAND_MAX
 
@@ -64,6 +63,13 @@ struct Duck
 {
     Shape s;
     Vec velocity;
+    struct Duck *prev;
+    struct Duck *next;
+    Duck()
+    {
+        prev = NULL;
+        next = NULL;
+    }
 };
 
 struct Game {
@@ -85,9 +91,6 @@ struct Game {
         floor = 100;
         duck->s.width = 50;
         duck->s.height = 50;
-        //duck->s.center.x = 0;
-        //duck->s.center.y = 0;
-        //duck->s.center.z = 0;
     }
 };
 
@@ -100,6 +103,7 @@ int check_keys(XEvent *e, Game *game);
 void movement(Game *game);
 void render(Game *game);
 void makeDuck(Game *game);
+void deleteDuck(Game *game, Duck *duck);
 
 int main(void)
 {
@@ -186,62 +190,68 @@ void makeDuck(Game *game, float x, float y)
     if(game->n >= MAX_DUCKS)
         return;
     std::cout << "makeDuck() " << x << " " << y << std::endl;
-    Duck *d = &game->duck[game->n];
+    Duck *d = new Duck;
+    d = &game->duck[game->n];
     d->s.center.x = x;
     d->s.center.y = y;
     d->s.center.z = 0.0;
-    d->velocity.x = 0.5;
-    d->velocity.y = 0.5;
+    d->velocity.x = 3.0;
+    d->velocity.y = 3.0;
     d->velocity.z = 0.0;
+    d->next = game->duck;
+    if(game->duck != NULL)
+    {
+        game->duck->prev = d;
+    }
+    game->duck = d;
     game->n++;
 }
 
 void check_mouse(XEvent *e, Game *game)
 {
-    static int savex = 0;
-    static int savey = 0;
+    int y = WINDOW_HEIGHT - e->xbutton.y;
 
-    Duck *d;
-    //    static int n = 0;
+    for(int i = 0; i < game->n; i++)
+    {
+        Duck *d = &game->duck[i];
 
-    if (e->type == ButtonRelease) {
-        return;
-    }
-    //    for(int i = 0; i < game->n; i++)
-    //  {
-    d = game->duck;
-    if (e->type == ButtonPress) {
-        if (e->xbutton.button==1) {
-            //Left button was pressed
-            if(e->xbutton.x >= d->s.center.x - d->s.width &&
-                    e->xbutton.x <= d->s.center.x + d->s.width &&
-                    e->xbutton.y <= d->s.center.y + d->s.height &&
-                    e->xbutton.y >= d->s.center.y - d->s.height)
-            {
-                game->hit = true;
+        if (e->type == ButtonRelease) {
+            return;
+        }
+        if (e->type == ButtonPress) {
+            if (e->xbutton.button==1) {
+                //Left button was pressed
+                if(game->bullets == 0)
+                {
+                    std::cout << "no bullets" << std::endl;
+                    return;
+                }
+                if(e->xbutton.x >= d->s.center.x - d->s.width &&
+                        e->xbutton.x <= d->s.center.x + d->s.width &&
+                        y <= d->s.center.y + d->s.height &&
+                        y >= d->s.center.y - d->s.height)
+                {
+                    game->hit = true;
+                    Duck *saved = d->next;
+                    deleteDuck(game, d);
+                    d = saved;
+                    game->n--;
+                    game->bullets--;
+                    std::cout << "shoot true" << std::endl;
+                    std::cout << "bullets = " << game->bullets << std::endl;
+                    return;
+                }
+                game->hit = false;
                 game->bullets--;
-                makeDuck(game, rand() % (WINDOW_WIDTH - (int)d->s.width + 1) + (int)d->s.width, game->floor + d->s.height);
-                std::cout << "shoot true" << std::endl;
+                std::cout << "shoot false" << std::endl;
+                std::cout << "bullets = " << game->bullets << std::endl;
                 return;
             }
-            game->hit = false;
-            game->bullets--;
-            makeDuck(game, rand() % (WINDOW_WIDTH - (int)d->s.width + 1) + (int)d->s.width, game->floor + d->s.height);
-            std::cout << "shoot false" << std::endl;
-            return;
+            if (e->xbutton.button==3) {
+                //Right button was pressed
+                return;
+            }
         }
-        if (e->xbutton.button==3) {
-            //Right button was pressed
-            return;
-        }
-    }
-    //    }
-    //Did the mouse move?
-    if (savex != e->xbutton.x || savey != e->xbutton.y) {
-        savex = e->xbutton.x;
-        savey = e->xbutton.y;
-        //if (++n < 10)
-        //  return;
     }
 }
 
@@ -257,8 +267,9 @@ int check_keys(XEvent *e, Game *game)
         if(key == XK_b)
         {
             game->bullets = 3;
-            makeDuck(game, rand()%WINDOW_WIDTH, game->floor);
+            makeDuck(game, rand() % (WINDOW_WIDTH - (int)game->duck->s.width + 1) + (int)game->duck->s.width, game->floor + game->duck->s.height + 0.1);
             std::cout << "makeduck" << std::endl;
+            std::cout << "bullets = " << game->bullets << std::endl;
         }
 
     }
@@ -275,8 +286,6 @@ void movement(Game *game)
     for(int i = 0; i < game->n; i++)
     {
         d = &game->duck[i];
-        //d->s.center.x += d->velocity.x;
-        //d->s.center.y += d->velocity.y;
 
         if(d->s.center.x - d->s.width <= 0.0)
         {
@@ -302,11 +311,9 @@ void movement(Game *game)
             d->velocity.y *= -1.0;
             std::cout << i << " off screen - up" << std::endl;
         }
-        
+
         d->s.center.x += d->velocity.x;
         d->s.center.y += d->velocity.y;
-        
-        //std::cout << i << std::endl;
     }
 }
 
@@ -316,19 +323,11 @@ void render(Game *game)
     glClear(GL_COLOR_BUFFER_BIT);
     //Draw shapes...
 
-    //glLineWidth(WINDOW_WIDTH);
     glColor3ub(255, 255, 255);
     glBegin(GL_LINES);
     glVertex2f(0.0, game->floor);
     glVertex2f(WINDOW_WIDTH, game->floor);
     glEnd();
-
-    /*glBegin(GL_QUADS);
-    glVertex2f(0, game->floor);
-    glVertex2f(0, 0);
-    glVertex2f(WINDOW_WIDTH, 0);
-    glVertex2f(WINDOW_WIDTH, game->floor);
-    glEnd();*/
 
     //glPushMatrix();
     Duck *d;
@@ -336,8 +335,6 @@ void render(Game *game)
     for(int i = 0; i < game->n; i++)
     {
         d = &game->duck[i];
-        //glPushMatrix();
-        //glTranslatef(d->s.center.x, d->s.center.y, d->s.center.z);
         w = d->s.width;
         h = d->s.height;
         x = d->s.center.x;
@@ -349,41 +346,34 @@ void render(Game *game)
         glVertex2f(x+w, y+h);
         glEnd();
     }
-    //glPopMatrix();
+}
 
-    /*Shape *d;
-      glColor3ub(255, 255, 255);
-      for(int i = 0; i < game->n; i++)
-      {
-      d = &game->duck[i].s;
-      glPushMatrix();
-      glTranslatef(d->center.x, d->center.y, d->center.z);
-      w = d->width;
-      h = d->height;
-      glBegin(GL_QUADS);
-      glVertex2i(-w, -h);
-      glVertex2i(-w, h);
-      glVertex2i(w, h);
-      glVertex2i(w, -h);
-      glEnd();
-      glPopMatrix();
-      }*/
-
-    /*glPushMatrix();
-      glColor3ub(255,255,255);
-      for(int i = 0; i < game->n; i++)
-      {
-      Vec *d = &game->duck[i].s.center;
-      glPushMatrix();
-      w = d->x;
-      h = d->y;
-      glBegin(GL_QUADS);
-      glVertex2i(-w, -h);
-      glVertex2i(-w, h);
-      glVertex2i(w, h);
-      glVertex2i(w, -h);
-      glEnd();
-      glPopMatrix();
-      }
-      glPopMatrix();*/
+void deleteDuck(Game *game, Duck *node)
+{
+    if(node->prev == NULL)
+    {
+        if(node->next == NULL)
+        {
+            game->duck = NULL;
+        }
+        else
+        {
+            node->next->prev = NULL;
+            game->duck = node->next;
+        }
+    }
+    else
+    {
+        if(node->next == NULL)
+        {
+            node->prev->next = NULL;
+        }
+        else
+        {
+            node->prev->next = node->next;
+            node->next->prev = node->prev;
+        }
+    }
+    delete node;
+    node = NULL;
 }
