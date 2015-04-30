@@ -67,8 +67,8 @@ struct Duck
     struct Duck *next;
     Duck()
     {
-        prev = NULL;
-        next = NULL;
+	prev = NULL;
+	next = NULL;
     }
 };
 
@@ -80,17 +80,15 @@ struct Game {
     float floor;
     ~Game()
     {
-        delete [] duck;
+	delete [] duck;
     }
     Game()
     {
-        hit = false;
-        bullets = 3;
-        duck = new Duck[MAX_DUCKS];
-        n = 0;
-        floor = 100;
-        duck->s.width = 50;
-        duck->s.height = 50;
+	duck = NULL;
+	hit = false;
+	bullets = 0;
+	n = 0;
+	floor = 100.0;
     }
 };
 
@@ -116,15 +114,15 @@ int main(void)
 
     //start animation
     while(!done) {
-        while(XPending(dpy)) {
-            XEvent e;
-            XNextEvent(dpy, &e);
-            check_mouse(&e, &game);
-            done = check_keys(&e, &game);
-        }
-        movement(&game);
-        render(&game);
-        glXSwapBuffers(dpy, win);
+	while(XPending(dpy)) {
+	    XEvent e;
+	    XNextEvent(dpy, &e);
+	    check_mouse(&e, &game);
+	    done = check_keys(&e, &game);
+	}
+	movement(&game);
+	render(&game);
+	glXSwapBuffers(dpy, win);
     }
     cleanupXWindows();
     return 0;
@@ -149,24 +147,24 @@ void initXWindows(void) {
     int w=WINDOW_WIDTH, h=WINDOW_HEIGHT;
     dpy = XOpenDisplay(NULL);
     if (dpy == NULL) {
-        std::cout << "\n\tcannot connect to X server\n" << std::endl;
-        exit(EXIT_FAILURE);
+	std::cout << "\n\tcannot connect to X server\n" << std::endl;
+	exit(EXIT_FAILURE);
     }
     Window root = DefaultRootWindow(dpy);
     XVisualInfo *vi = glXChooseVisual(dpy, 0, att);
     if(vi == NULL) {
-        std::cout << "\n\tno appropriate visual found\n" << std::endl;
-        exit(EXIT_FAILURE);
+	std::cout << "\n\tno appropriate visual found\n" << std::endl;
+	exit(EXIT_FAILURE);
     } 
     Colormap cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
     XSetWindowAttributes swa;
     swa.colormap = cmap;
     swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask |
-        ButtonPress | ButtonReleaseMask |
-        PointerMotionMask |
-        StructureNotifyMask | SubstructureNotifyMask;
+	ButtonPress | ButtonReleaseMask |
+	PointerMotionMask |
+	StructureNotifyMask | SubstructureNotifyMask;
     win = XCreateWindow(dpy, root, 0, 0, w, h, 0, vi->depth,
-            InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
+	    InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
     set_title();
     glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
     glXMakeCurrent(dpy, win, glc);
@@ -188,20 +186,30 @@ void init_opengl(void)
 void makeDuck(Game *game, float x, float y)
 {
     if(game->n >= MAX_DUCKS)
-        return;
+	return;
+    int directionNum = rand() % 101;
+    bool direction;
+    if(directionNum >= 50)
+	direction = true;
+    else
+	direction = false;
     std::cout << "makeDuck() " << x << " " << y << std::endl;
     Duck *d = new Duck;
-    d = &game->duck[game->n];
     d->s.center.x = x;
     d->s.center.y = y;
     d->s.center.z = 0.0;
-    d->velocity.x = 3.0;
+    if(direction)
+	d->velocity.x = 3.0;
+    else
+	d->velocity.x = -3.0;
     d->velocity.y = 3.0;
     d->velocity.z = 0.0;
+    d->s.width = 50.0;
+    d->s.height = 50.0;
     d->next = game->duck;
     if(game->duck != NULL)
     {
-        game->duck->prev = d;
+	game->duck->prev = d;
     }
     game->duck = d;
     game->n++;
@@ -211,47 +219,79 @@ void check_mouse(XEvent *e, Game *game)
 {
     int y = WINDOW_HEIGHT - e->xbutton.y;
 
-    for(int i = 0; i < game->n; i++)
-    {
-        Duck *d = &game->duck[i];
+    Duck *d = game->duck;
+    Duck *saved;
 
-        if (e->type == ButtonRelease) {
-            return;
-        }
-        if (e->type == ButtonPress) {
-            if (e->xbutton.button==1) {
-                //Left button was pressed
-                if(game->bullets == 0)
-                {
-                    std::cout << "no bullets" << std::endl;
-                    return;
-                }
-                if(e->xbutton.x >= d->s.center.x - d->s.width &&
-                        e->xbutton.x <= d->s.center.x + d->s.width &&
-                        y <= d->s.center.y + d->s.height &&
-                        y >= d->s.center.y - d->s.height)
-                {
-                    game->hit = true;
-                    Duck *saved = d->next;
-                    deleteDuck(game, d);
-                    d = saved;
-                    game->n--;
-                    game->bullets--;
-                    std::cout << "shoot true" << std::endl;
-                    std::cout << "bullets = " << game->bullets << std::endl;
-                    return;
-                }
-                game->hit = false;
-                game->bullets--;
-                std::cout << "shoot false" << std::endl;
-                std::cout << "bullets = " << game->bullets << std::endl;
-                return;
-            }
-            if (e->xbutton.button==3) {
-                //Right button was pressed
-                return;
-            }
-        }
+    if (e->type == ButtonRelease) {
+	return;
+    }
+    if (e->type == ButtonPress) {
+	if (e->xbutton.button==1) {
+	    //Left button was pressed
+	    while(d)
+	    {	
+		if(game->bullets <= 1)
+		{
+		    saved = d->next;
+		    deleteDuck(game, d);
+		    d = saved;
+		    if(game->n == 1)
+		    {
+			saved = d->next;
+			deleteDuck(game, d);
+			d = saved;
+		    }
+		    std::cout << "no bullets" << std::endl;
+		    std::cout << "game over" << std::endl;
+		    return;
+		}
+		if(e->xbutton.x >= d->s.center.x - d->s.width &&
+			e->xbutton.x <= d->s.center.x + d->s.width &&
+			y <= d->s.center.y + d->s.height &&
+			y >= d->s.center.y - d->s.height)
+		{
+		    saved = d->next;
+		    deleteDuck(game, d);
+		    d = saved;
+		    game->bullets--;	
+		    std::cout << "shoot true" << std::endl;
+		    std::cout << "bullets = " << game->bullets << std::endl;
+		    return;
+		}
+		if(game->n == 2)
+		{
+		    d = d->next;
+		    if(e->xbutton.x >= d->s.center.x - d->s.width &&
+			    e->xbutton.x <= d->s.center.x + d->s.width &&
+			    y <= d->s.center.y + d->s.height &&
+			    y >= d->s.center.y - d->s.height)
+		    {
+			saved = d->next;
+			deleteDuck(game, d);
+			d = saved;
+			game->bullets--;
+			std::cout << "shoot true" << std::endl;
+			std::cout << "bullets = " << game->bullets << std::endl;
+			return;
+		    }
+		    else
+		    {
+			game->bullets--;
+			std::cout << "shoot false" << std::endl;
+			std::cout << "bullets = " << game->bullets << std::endl;
+			return;
+		    }
+		}
+		game->bullets--;	
+		std::cout << "shoot false" << std::endl;
+		std::cout << "bullets = " << game->bullets << std::endl;
+		d = d->next;
+	    }
+	}
+    }
+    if (e->xbutton.button==3) {
+	//Right button was pressed
+	return;
     }
 }
 
@@ -259,18 +299,26 @@ int check_keys(XEvent *e, Game *game)
 {
     //Was there input from the keyboard?
     if (e->type == KeyPress) {
-        int key = XLookupKeysym(&e->xkey, 0);
-        if (key == XK_Escape) {
-            return 1;
-        }
-        //You may check other keys here.
-        if(key == XK_b)
-        {
-            game->bullets = 3;
-            makeDuck(game, rand() % (WINDOW_WIDTH - (int)game->duck->s.width + 1) + (int)game->duck->s.width, game->floor + game->duck->s.height + 0.1);
-            std::cout << "makeduck" << std::endl;
-            std::cout << "bullets = " << game->bullets << std::endl;
-        }
+	int key = XLookupKeysym(&e->xkey, 0);
+	if (key == XK_Escape) {
+	    return 1;
+	}
+	//You may check other keys here.
+	if(key == XK_1)
+	{
+	    game->bullets = 3;
+	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+	    std::cout << "makeduck" << std::endl;
+	    std::cout << "bullets = " << game->bullets << std::endl;
+	}
+	if(key == XK_2)
+	{
+	    game->bullets = 3;
+	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+	    std::cout << "2 makeduck" << std::endl;
+	    std::cout << "bullets = " << game->bullets << std::endl;
+	}
 
     }
     return 0;
@@ -278,42 +326,42 @@ int check_keys(XEvent *e, Game *game)
 
 void movement(Game *game)
 {
-    Duck *d;
+    Duck *d = game->duck;
 
     if (game->n <= 0)
-        return;
+	return;
 
-    for(int i = 0; i < game->n; i++)
+    while(d)
     {
-        d = &game->duck[i];
+	if(d->s.center.x - d->s.width <= 0.0)
+	{
+	    d->s.center.x = d->s.width + 0.1;
+	    d->velocity.x *= -1.0;
+	    std::cout << " off screen - left" << std::endl;
+	}
+	if(d->s.center.x + d->s.width >= WINDOW_WIDTH)
+	{
+	    d->s.center.x = WINDOW_WIDTH - d->s.width - 0.1;
+	    d->velocity.x *= -1.0;
+	    std::cout << " off screen - right" << std::endl;
+	}
+	if(d->s.center.y - d->s.height <= game->floor)
+	{
+	    d->s.center.y = game->floor + d->s.height + 0.1;
+	    d->velocity.y *= -1.0;
+	    std::cout << " off screen - down" << std::endl;
+	}
+	if(d->s.center.y + d->s.height >= WINDOW_HEIGHT)
+	{
+	    d->s.center.y = WINDOW_HEIGHT - d->s.height - 0.1;
+	    d->velocity.y *= -1.0;
+	    std::cout << " off screen - up" << std::endl;
+	}
 
-        if(d->s.center.x - d->s.width <= 0.0)
-        {
-            d->s.center.x = d->s.width + 0.1;;
-            d->velocity.x *= -1.0;
-            std::cout << i << " off screen - left" << std::endl;
-        }
-        if(d->s.center.x + d->s.width >= WINDOW_WIDTH)
-        {
-            d->s.center.x = WINDOW_WIDTH - d->s.width - 0.1;
-            d->velocity.x *= -1.0;
-            std::cout << i << " off screen - right" << std::endl;
-        }
-        if(d->s.center.y - d->s.height <= game->floor)
-        {
-            d->s.center.y = game->floor + d->s.height + 0.1;
-            d->velocity.y *= -1.0;
-            std::cout << i << " off screen - down" << std::endl;
-        }
-        if(d->s.center.y + d->s.height >= WINDOW_HEIGHT)
-        {
-            d->s.center.y = WINDOW_HEIGHT - d->s.height - 0.1;
-            d->velocity.y *= -1.0;
-            std::cout << i << " off screen - up" << std::endl;
-        }
+	d->s.center.x += d->velocity.x;
+	d->s.center.y += d->velocity.y;
 
-        d->s.center.x += d->velocity.x;
-        d->s.center.y += d->velocity.y;
+	d = d->next;	
     }
 }
 
@@ -330,21 +378,22 @@ void render(Game *game)
     glEnd();
 
     //glPushMatrix();
-    Duck *d;
+    Duck *d = game->duck;
     glColor3ub(255, 255, 255);
-    for(int i = 0; i < game->n; i++)
+    while(d)
     {
-        d = &game->duck[i];
-        w = d->s.width;
-        h = d->s.height;
-        x = d->s.center.x;
-        y = d->s.center.y;
-        glBegin(GL_QUADS);
-        glVertex2f(x-w, y+h);
-        glVertex2f(x-w, y-h);
-        glVertex2f(x+w, y-h);
-        glVertex2f(x+w, y+h);
-        glEnd();
+	//d = &game->duck[i];
+	w = d->s.width;
+	h = d->s.height;
+	x = d->s.center.x;
+	y = d->s.center.y;
+	glBegin(GL_QUADS);
+	glVertex2f(x-w, y+h);
+	glVertex2f(x-w, y-h);
+	glVertex2f(x+w, y-h);
+	glVertex2f(x+w, y+h);
+	glEnd();
+	d = d->next;
     }
 }
 
@@ -352,30 +401,29 @@ void deleteDuck(Game *game, Duck *node)
 {
     if(node->prev == NULL)
     {
-        if(node->next == NULL)
-        {
-            game->duck = NULL;
-        }
-        else
-        {
-            node->next->prev = NULL;
-            game->duck = node->next;
-        }
+	if(node->next == NULL)
+	{
+	    game->duck = NULL;
+	}
+	else
+	{
+	    node->next->prev = NULL;
+	    game->duck = node->next;
+	}
     }
     else
     {
-        if(node->next == NULL)
-        {
-            node->prev->next = NULL;
-        }
-        else
-        {
-            node->prev->next = node->next;
-            node->next->prev = node->prev;
-        }
+	if(node->next == NULL)
+	{
+	    node->prev->next = NULL;
+	}
+	else
+	{
+	    node->prev->next = node->next;
+	    node->next->prev = node->prev;
+	}
     }
     delete node;
     node = NULL;
+    game->n--;
 }
-
-//Testing
