@@ -631,11 +631,10 @@ void render(Game *game)
 	}
 
 	//glPushMatrix();
-	Duck *d;
+	Duck *d = game->duck;
 	glColor3ub(255, 255, 255);
-	for(int i = 0; i < game->n; i++)
+	while(d)
 	{
-	    d = &game->duck[i];
 	    w = d->s.width;
 	    h = d->s.height;
 	    x = d->s.center.x;
@@ -646,6 +645,7 @@ void render(Game *game)
 	    glVertex2f(x+w, y-h);
 	    glVertex2f(x+w, y+h);
 	    glEnd();
+	    d = d->next;
 	}
     }
 }
