@@ -10,7 +10,10 @@
 #include <X11/keysym.h>
 #include <GL/glx.h>
 #include "ppm.h"
+#include <stdio.h>
+#include <unistd.h> //for sleep function
 
+//800, 600
 #define WINDOW_WIDTH  800
 #define WINDOW_HEIGHT 600
 
@@ -62,6 +65,7 @@ struct Duck
     struct timespec time;
     struct Duck *prev;
     struct Duck *next;
+    //bool shot;
     Duck()
     {
 	prev = NULL;
@@ -76,7 +80,12 @@ struct Game {
     float floor;
     int rounds;
     struct timespec duckTimer;
-    Shape box1[1];
+    //Shape box1[1];
+    Shape box[4];
+    int score;
+    int duckCount;
+    int duckShot;
+    bool oneDuck, twoDuck;
     ~Game()
     {
 	delete [] duck;
@@ -86,18 +95,45 @@ struct Game {
 	duck = NULL;
 	bullets = 0;
 	n = 0;
-	floor = 100.0;
+	floor = WINDOW_HEIGHT / 5.0;
 	rounds = 1;
-	for(int i = 0; i <= 2; i++)
-	{
-	    box1[i].width = 45;
-	    box1[i].height = 35;
-	    box1[i].center.x = WINDOW_WIDTH - 675;
-	    box1[i].center.y = WINDOW_HEIGHT - 550;
-	    //box1[i].center.x = WINDOW_HEIGHT - 550;
-	    //box1[i].center.y = WINDOW_WIDTH - 50;
-	    box1[i].center.z = 0;
-	}
+	score = 0;
+	duckCount = 0;
+	oneDuck = false;
+	twoDuck = false;
+	/*for(int i = 0; i <= 2; i++)
+	  {
+	  box1[i].width = 45;
+	  box1[i].height = 35;
+	  box1[i].center.x = WINDOW_WIDTH - 675;
+	  box1[i].center.y = WINDOW_HEIGHT - 550;
+	//box1[i].center.x = WINDOW_HEIGHT - 550;
+	//box1[i].center.y = WINDOW_WIDTH - 50;
+	box1[i].center.z = 0;
+	}*/
+	box[0].width = 45;
+	box[0].height = 35;
+	box[0].center.x = (WINDOW_WIDTH / 10) - (WINDOW_WIDTH / 20);
+	box[0].center.y = WINDOW_HEIGHT - (WINDOW_HEIGHT - floor) - (floor / 1.1);
+	box[0].center.z = 0;
+
+	box[1].width = 100;
+	box[1].height = 35;
+	box[1].center.x = WINDOW_WIDTH / 4;
+	box[1].center.y = WINDOW_HEIGHT - (WINDOW_HEIGHT - floor) - (floor / 1.1);
+	box[1].center.z = 0;
+
+	box[2].width = 45;
+	box[2].height = 35;
+	box[2].center.x = (WINDOW_WIDTH / 2) + (WINDOW_WIDTH / 4);
+	box[2].center.y = WINDOW_HEIGHT - (WINDOW_HEIGHT - floor) - (floor / 1.1);
+	box[2].center.z = 0;
+
+	box[3].width = 45;
+	box[3].height = 35;
+	box[3].center.x = (WINDOW_WIDTH / 10) - (WINDOW_WIDTH / 70);
+	box[3].center.y = WINDOW_HEIGHT - (WINDOW_HEIGHT - floor) - (floor / 1.5);
+	box[3].center.z = 0;
     }
 };
 
@@ -301,13 +337,14 @@ void makeDuck(Game *game, float x, float y)
     d->s.center.y = y;
     d->s.center.z = 0.0;
     if(direction)
-	d->velocity.x = 3.0;
+	d->velocity.x = 4.0 * (game->rounds * .5);
     else
-	d->velocity.x = -3.0;
-    d->velocity.y = 3.0;
+	d->velocity.x = -4.0 * (game->rounds * .5);
+    d->velocity.y = 4.0 * (game->rounds * .5);
     d->velocity.z = 0.0;
     d->s.width = 50.0;
     d->s.height = 50.0;
+    //d->shot = false;
     d->next = game->duck;
     if(game->duck != NULL)
     {
@@ -334,6 +371,11 @@ void check_mouse(XEvent *e, Game *game)
 
     Duck *d = game->duck;
     Duck *saved;
+    //Rect r;
+    //r.center = 0;
+    struct timespec dt;
+    clock_gettime(CLOCK_REALTIME, &dt);
+    double ts;
 
     if (e->type == ButtonRelease) {
 	return;
@@ -363,12 +405,18 @@ void check_mouse(XEvent *e, Game *game)
 			y <= d->s.center.y + d->s.height &&
 			y >= d->s.center.y - d->s.height)
 		{
+		    ts = timeDiff(&d->time, &dt);
+		    if(ts < 1.5)
+			game->score += 200;
+		    else
+			game->score += 100;
 		    saved = d->next;
 		    deleteDuck(game, d);
 		    d = saved;
 		    game->bullets--;	
 		    std::cout << "shoot true" << std::endl;
 		    std::cout << "bullets = " << game->bullets << std::endl;
+		    game->duckShot++;
 		    return;
 		}
 		if(game->n == 2)
@@ -379,21 +427,27 @@ void check_mouse(XEvent *e, Game *game)
 			    y <= d->s.center.y + d->s.height &&
 			    y >= d->s.center.y - d->s.height)
 		    {
+			ts = timeDiff(&d->time, &dt);
+			if(ts < 1.5)
+			    game->score += 200;
+			else
+			    game->score += 100;
 			saved = d->next;
 			deleteDuck(game, d);
 			d = saved;
 			game->bullets--;
 			std::cout << "shoot true" << std::endl;
 			std::cout << "bullets = " << game->bullets << std::endl;
+			game->duckShot++;
 			return;
 		    }
-		    else
-		    {
-			game->bullets--;
-			std::cout << "shoot false" << std::endl;
-			std::cout << "bullets = " << game->bullets << std::endl;
-			return;
-		    }
+		    /*else
+		      {
+		      game->bullets--;
+		      std::cout << "shoot false" << std::endl;
+		      std::cout << "bullets = " << game->bullets << std::endl;
+		      return;
+		      }*/
 		}
 		game->bullets--;	
 		std::cout << "shoot false" << std::endl;
@@ -410,6 +464,7 @@ void check_mouse(XEvent *e, Game *game)
 
 int check_keys(XEvent *e, Game *game)
 {
+    Duck *d = game->duck;
     //Was there input from the keyboard?
     if (e->type == KeyPress) {
 	int key = XLookupKeysym(&e->xkey, 0);
@@ -419,22 +474,47 @@ int check_keys(XEvent *e, Game *game)
 	//You may check other keys here.
 	if(key == XK_1)
 	{
+	    while(d)
+	    {
+		deleteDuck(game, d);
+		d = d->next;
+	    }	
+	    game->rounds = 1;
+	    game->duckCount = 0;
+	    game->duckShot = 0;
 	    std::cout << "ROUND " << game->rounds << std::endl;
 	    game->bullets = 3;
-	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+	    //makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
 	    std::cout << "makeduck" << std::endl;
 	    std::cout << "bullets = " << game->bullets << std::endl;
+	    if(!game->oneDuck)
+		game->oneDuck = true;
+	    else
+		game->oneDuck = false;
+	    game->twoDuck = false;
 	}
 	if(key == XK_2)
 	{
+	    while(d)
+	    {
+		deleteDuck(game, d);
+		d = d->next;
+	    }	
+	    game->rounds = 1;
+	    game->duckCount = 0;
+	    game->duckShot = 0;
 	    std::cout << "ROUND " << game->rounds << std::endl;
 	    game->bullets = 3;
-	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
-	    makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+	    //makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+	    //makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
 	    std::cout << "2 makeduck" << std::endl;
 	    std::cout << "bullets = " << game->bullets << std::endl;
+	    if(!game->twoDuck)
+		game->twoDuck = true;
+	    else
+		game->twoDuck = false;
+	    game->oneDuck = false;
 	}
-
     }
     return 0;
 }
@@ -451,13 +531,13 @@ void movement(Game *game)
     while(d)
     {
 	double ts = timeDiff(&d->time, &dt);
-	std::cout << ts << std::endl;
-	if(ts > 2.5)
+	//std::cout << ts << std::endl;
+	if(ts > 5)
 	{
 	    Duck *saved = d->next;
 	    deleteDuck(game, d);
 	    d = saved;
-	    std::cout << "deleteDuck" << std::endl;
+	    //std::cout << "deleteDuck" << std::endl;
 	    continue;
 	}
 
@@ -537,146 +617,262 @@ void render(Game *game)
     Shape *s;
     //glColor3ub(90,140,90);
 
+    /*for(int i = 0; i < 2; i++)
+      {
+      glColor3ub(90, 140, 90);
+      s = &game->box[i];
+      glPushMatrix();
+      glTranslatef(s->center.x, s->center.y, s->center.z);
+      w = s->width;
+      h = s->height;
+      r.bot = s->height;
+      r.left = s->width;
+      glVertex2i(-w, -h);
+      glVertex2i(-w, h);
+      glVertex2i(w, h);
+      glVertex2i(w, -h);
+      glEnd();
+      ggprint8b(&r , 16, 0x00ffffff, "hello");
+      glPopMatrix();
+      }*/
+    glColor3ub(90, 140, 90);
+    s = &game->box[0];
+    glPushMatrix();
+    glTranslatef(s->center.x, s->center.y, s->center.z);
+    w = s->width;
+    h = s->height;
+    r.bot = s->height;
+    r.left = s->width;
+    glVertex2i(-w, -h);
+    glVertex2i(-w, h);
+    glVertex2i(w, h);
+    glVertex2i(w, -h);
+    glEnd();
+    ggprint16(&r , 16, 0x00ffffff, "%i", game->bullets);
+    glPopMatrix();
+
+    glColor3ub(90, 140, 90);
+    s = &game->box[1];
+    glPushMatrix();
+    glTranslatef(s->center.x, s->center.y, s->center.z);
+    w = s->width;
+    h = s->height;
+    r.bot = s->height;
+    r.left = s->width;
+    glVertex2i(-w, -h);
+    glVertex2i(-w, h);
+    glVertex2i(w, h);
+    glVertex2i(w, -h);
+    glEnd();
+    ggprint16(&r , 16, 0x00ffffff, "%i", game->duckShot);
+    glPopMatrix();
+
+    glColor3ub(90, 140, 90);
+    s = &game->box[2];
+    glPushMatrix();
+    glTranslatef(s->center.x, s->center.y, s->center.z);
+    w = s->width;
+    h = s->height;
+    r.bot = s->height;
+    r.left = s->width;
+    glVertex2i(-w, -h);
+    glVertex2i(-w, h);
+    glVertex2i(w, h);
+    glVertex2i(w, -h);
+    glEnd();
+    ggprint16(&r , 16, 0x00ffffff, "%i", game->score);
+    glPopMatrix();
+
+    glColor3ub(90, 140, 90);
+    s = &game->box[3];
+    glPushMatrix();
+    glTranslatef(s->center.x, s->center.y, s->center.z);
+    w = s->width;
+    h = s->height;
+    r.bot = s->height;
+    r.left = s->width;
+    glVertex2i(-w, -h);
+    glVertex2i(-w, h);
+    glVertex2i(w, h);
+    glVertex2i(w, -h);
+    glEnd();
+    ggprint16(&r , 16, 0x00ffffff, "%i", game->rounds);
+    glPopMatrix();
+
+    /*
     //left box with Bullets     
     for (int i = 0; i<1; i++) {
-	//glColor3ub(90,140,90);
-	s = &game->box1[i];
-	glPushMatrix();
-	glTranslatef(s->center.x, s->center.y, s->center.z);
-	w = s->width;
-	h = s->height;
+    //glColor3ub(90,140,90);
+    s = &game->box[0];
+    glPushMatrix();
+    glTranslatef(s->center.x, s->center.y, s->center.z);
+    w = s->width;
+    h = s->height;
 
-	glBegin(GL_QUADS);
-	glVertex2f(-w, -h);
-	glVertex2f(-w,  h);
-	glVertex2f( w,  h);
-	glVertex2f( w, -h);
-	glEnd();
-	glPopMatrix();
-	ggprint16(&r, 16, 0x00ff0000, "SHOT: ");
-	//ggprint16(&r, 16, 0x0099FF, "SHOT: ");
-	r.bot = WINDOW_HEIGHT - 575;
-	r.left = WINDOW_WIDTH - 685;
-	//game->bullets = 3;
-	int a = game->bullets;
-	if(a == 3)
-	    ggprint16(&r, 16, 0x00ff0000, "3");
-	if(a == 2)
-	    ggprint16(&r, 16, 0x00ff0000, "2");
-	if(a == 1)
-	    ggprint16(&r, 16, 0x00ff0000, "1");
-	if(a == 0)
-	    ggprint16(&r, 16, 0x00ff0000, "0");
+    glBegin(GL_QUADS);
+    glVertex2f(-w, -h);
+    glVertex2f(-w,  h);
+    glVertex2f( w,  h);
+    glVertex2f( w, -h);
+    glEnd();
+    glPopMatrix();
+    ggprint16(&r, 16, 0x00ff0000, "SHOT: ");
+    //ggprint16(&r, 16, 0x0099FF, "SHOT: ");
+    r.bot = WINDOW_HEIGHT - 575;
+    r.left = WINDOW_WIDTH - 685;
+    //game->bullets = 3;
+    int a = game->bullets;
+    if(a == 3)
+    ggprint16(&r, 16, 0x00ff0000, "3");
+    if(a == 2)
+    ggprint16(&r, 16, 0x00ff0000, "2");
+    if(a == 1)
+    ggprint16(&r, 16, 0x00ff0000, "1");
+    if(a == 0)
+    ggprint16(&r, 16, 0x00ff0000, "0");
 
     }
     //Shape *s2;
-    for (int i = 0; i < 1; i++) {
-	glColor3ub(90,140,90);
-	s = &game->box1[1];
-	glPushMatrix();
-	s->width = 100;
-	s->height = 35;
-	s->center.x = WINDOW_WIDTH - 400;
-	s->center.y = WINDOW_HEIGHT - 550;
-	s->center.z = 0;
-	glTranslatef(s->center.x, s->center.y, s->center.z);
+    //for (int i = 0; i < 1; i++) {
+    glColor3ub(90,140,90);
+    s = &game->box[1];
+    glPushMatrix();
+    s->width = 100;
+    s->height = 35;
+    s->center.x = WINDOW_WIDTH - 400;
+    s->center.y = WINDOW_HEIGHT - 550;
+    s->center.z = 0;
+    glTranslatef(s->center.x, s->center.y, s->center.z);
 
-	w = s->width;
-	h = s->height;
+    w = s->width;
+    h = s->height;
 
-	glBegin(GL_QUADS);
-	glVertex2f(-w, -h);
-	glVertex2f(-w,  h);
-	glVertex2f( w,  h);
-	glVertex2f( w, -h);
-	glEnd();
+    glBegin(GL_QUADS);
+    glVertex2f(-w, -h);
+    glVertex2f(-w,  h);
+    glVertex2f( w,  h);
+    glVertex2f( w, -h);
+    glEnd();
 
-	r.bot = WINDOW_HEIGHT - 550;
-	r.left = WINDOW_WIDTH - 475;
-	glPopMatrix();
-	ggprint16(&r, 16, 0x00ff0000, "HIT: ");
-	//ggprint16(&r, 0x0033ADFF, "HIT: ");
+    r.bot = WINDOW_HEIGHT - 550;
+    r.left = WINDOW_WIDTH - 475;
+    glPopMatrix();
+    ggprint16(&r, 16, 0x00ff0000, "HIT: ");
+    //ggprint16(&r, 0x0033ADFF, "HIT: ");
 
-	for(int i = 0; i < 1; i++) {
-	    glColor3ub(90,140,90);
-	    s = &game->box1[2];
-	    glPushMatrix();
-	    s->width = 75;
-	    s->height = 35;
-	    s->center.x = WINDOW_WIDTH - 150;
-	    s->center.y = WINDOW_HEIGHT - 550;
-	    s->center.z = 0;
-	    glTranslatef(s->center.x, s->center.y, s->center.z);
+    //	for(int i = 0; i < 1; i++) {
+    glColor3ub(90,140,90);
+    s = &game->box[2];
+    glPushMatrix();
+    s->width = 75;
+    s->height = 35;
+    s->center.x = WINDOW_WIDTH - 150;
+    s->center.y = WINDOW_HEIGHT - 550;
+    s->center.z = 0;
+    glTranslatef(s->center.x, s->center.y, s->center.z);
 
-	    w = s->width;
-	    h = s->height;
+    w = s->width;
+    h = s->height;
 
-	    glBegin(GL_QUADS);
-	    glVertex2f(-w, -h);
-	    glVertex2f(-w,  h);
-	    glVertex2f( w,  h);
-	    glVertex2f( w, -h);
-	    glEnd();
+    glBegin(GL_QUADS);
+    glVertex2f(-w, -h);
+    glVertex2f(-w,  h);
+    glVertex2f( w,  h);
+    glVertex2f( w, -h);
+    glEnd();
 
-	    r.bot = WINDOW_HEIGHT - 550;
-	    r.left = WINDOW_WIDTH - 200;
-	    glPopMatrix();
-	    ggprint16(&r, 16, 0x00ff0000, "SCORE: ");
+    r.bot = WINDOW_HEIGHT - 550;
+    r.left = WINDOW_WIDTH - 200;
+    glPopMatrix();
+    ggprint16(&r, 16, 0x00ff0000, "SCORE: ");
 
-	    /*      r.bot = WINDOW_HEIGHT - 575;
-		    r.left = WINDOW_WIDTH - 205;
+    //      r.bot = WINDOW_HEIGHT - 575;
+    r.left = WINDOW_WIDTH - 205;
 
-		    ggprint16(&r, 16, 0x00ff0000, " 0 ");
-		    */
-	}
+    ggprint16(&r, 16, 0x00ff0000, " 0 ");
+    */
+	//	}
 
 	//glPushMatrix();
-	Duck *d = game->duck;
-	glColor3ub(255, 255, 255);
-	while(d)
+
+	if(game->oneDuck || game->twoDuck)
 	{
-	    w = d->s.width;
-	    h = d->s.height;
-	    x = d->s.center.x;
-	    y = d->s.center.y;
-	    glBegin(GL_QUADS);
-	    glVertex2f(x-w, y+h);
-	    glVertex2f(x-w, y-h);
-	    glVertex2f(x+w, y-h);
-	    glVertex2f(x+w, y+h);
-	    glEnd();
-	    d = d->next;
+	    Duck *d = game->duck;
+	    if(!d && game->duckCount >= 10 && game->duckShot >= 6)
+	    {
+		game->rounds++;
+		game->duckCount = 0;
+		game->duckShot = 0;
+	    }
+	    if(!d && game->duckCount >= 10 && game->duckShot < 6)
+	    {
+		while(d)
+		{
+		    deleteDuck(game, d);
+		    d = d->next;
+		}
+		game->oneDuck = false;
+		game->twoDuck = false;
+		std::cout << "GAME OVER" << std::endl;
+	    }
+	    if(!d && game->oneDuck && game->duckCount < 10)
+	    {
+		game->bullets = 3;
+		makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+		game->duckCount++;
+	    }
+	    if(!d && game->twoDuck && game->duckCount < 9)
+	    {
+		game->bullets = 3;
+		makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+		makeDuck(game, rand() % (WINDOW_WIDTH - 50 - 1) + 50 + 1, game->floor + 50 + 1);
+		game->duckCount += 2;
+	    }
+	    glColor3ub(255, 255, 255);
+	    while(d)
+	    {
+		w = d->s.width;
+		h = d->s.height;
+		x = d->s.center.x;
+		y = d->s.center.y;
+		glBegin(GL_QUADS);
+		glVertex2f(x-w, y+h);
+		glVertex2f(x-w, y-h);
+		glVertex2f(x+w, y-h);
+		glVertex2f(x+w, y+h);
+		glEnd();
+		d = d->next;
+	    }
 	}
-    }
 }
 
-    void deleteDuck(Game *game, Duck *node)
+void deleteDuck(Game *game, Duck *node)
+{
+    if(node->prev == NULL)
     {
-	if(node->prev == NULL)
+	if(node->next == NULL)
 	{
-	    if(node->next == NULL)
-	    {
-		game->duck = NULL;
-	    }
-	    else
-	    {
-		node->next->prev = NULL;
-		game->duck = node->next;
-	    }
+	    game->duck = NULL;
 	}
 	else
 	{
-	    if(node->next == NULL)
-	    {
-		node->prev->next = NULL;
-	    }
-	    else
-	    {
-		node->prev->next = node->next;
-		node->next->prev = node->prev;
-	    }
+	    node->next->prev = NULL;
+	    game->duck = node->next;
 	}
-	delete node;
-	node = NULL;
-	game->n--;
     }
+    else
+    {
+	if(node->next == NULL)
+	{
+	    node->prev->next = NULL;
+	}
+	else
+	{
+	    node->prev->next = node->next;
+	    node->next->prev = node->prev;
+	}
+    }
+    delete node;
+    node = NULL;
+    game->n--;
+}
