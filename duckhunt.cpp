@@ -46,8 +46,8 @@ void timeCopy(struct timespec *dest, struct timespec *source)
 	memcpy(dest, source, sizeof(struct timespec));
 }
 
-//Structures
 
+//Structures
 struct Vec {
 	float x, y, z;
 };
@@ -59,14 +59,16 @@ struct Shape {
 };
 
 //duck sprite
+typedef double Arr[3];
 struct Sprite {
-	Vec pos;
-	Vec vel;
+	Arr pos;
+	Arr vel;
 };
 Sprite duck_sprite;
 Ppmimage *duckImage=NULL;
 GLuint duckTexture;
 int show_duck = 0;
+
 
 struct Duck
 {
@@ -607,6 +609,7 @@ void render(Game *game)
 	//draw a quad with texture
 	//float wid = 120.0f;
 	//glColor3f(1.0,1.0,1.0);
+
 	if(background) {
 		glBindTexture(GL_TEXTURE_2D, backgroundTexture);
 		glBegin(GL_QUADS);
@@ -616,6 +619,7 @@ void render(Game *game)
 		glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
 		glEnd();
 	}
+
 	glDisable(GL_TEXTURE_2D);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_TEXTURE_2D);
@@ -640,24 +644,6 @@ void render(Game *game)
 	Shape *s;
 	//glColor3ub(90,140,90);
 
-	/*for(int i = 0; i < 2; i++)
-	  {
-	  glColor3ub(90, 140, 90);
-	  s = &game->box[i];
-	  glPushMatrix();
-	  glTranslatef(s->center.x, s->center.y, s->center.z);
-	  w = s->width;
-	  h = s->height;
-	  r.bot = s->height;
-	  r.left = s->width;
-	  glVertex2i(-w, -h);
-	  glVertex2i(-w, h);
-	  glVertex2i(w, h);
-	  glVertex2i(w, -h);
-	  glEnd();
-	  ggprint8b(&r , 16, 0x00ffffff, "hello");
-	  glPopMatrix();
-	  }*/
 	glColor3ub(90, 140, 90);
 	s = &game->box[0];
 	glPushMatrix();
@@ -725,7 +711,6 @@ void render(Game *game)
 
 	duck_sprite.pos[0] = s->center.x;
 	//glPushMatrix();
-	float wid = 120.0f;
 	if(game->oneDuck || game->twoDuck)
 	{
 		Duck *d = game->duck;
@@ -773,8 +758,19 @@ void render(Game *game)
 			glVertex2f(x+w, y+h);
 			glEnd();
 			d = d->next;
-		}
+//		}
 		//duck sprite
+		show_duck= 1;
+		float wid = 50.0f;
+		//float wid = 50.0f;
+		duck_sprite.pos[0] = x;
+		duck_sprite.pos[1] = y;
+		duck_sprite.pos[2] = s->center.z;
+		
+		//duck_sprite.pos[0] = s->center.x;
+		//duck_sprite.pos[1] = s->center.y;
+		//duck_sprite.pos[2] = s->center.z;
+
 		if(show_duck) {
 			glPushMatrix();
 			glTranslatef(duck_sprite.pos[0], duck_sprite.pos[1], duck_sprite.pos[2]);
@@ -815,6 +811,8 @@ void render(Game *game)
 			}
 			*/
 			glDisable(GL_ALPHA_TEST);
+		}
+		
 		}
 	}
 }
