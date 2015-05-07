@@ -67,8 +67,9 @@ struct Sprite {
 Sprite duck_sprite;
 Ppmimage *duckImage=NULL;
 GLuint duckTexture;
+GLuint duckSil;
 int show_duck = 0;
-
+int silhouette = 1;
 
 struct Duck
 {
@@ -314,19 +315,37 @@ void init_opengl(void)
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	backgroundImage = ppm6GetImage("./images/background.ppm");
 	
+	glGenTextures(1, &duckTexture);
+	glGenTextures(1, &duckSil);
 	//-------------------------------------------------------------------
 	//duck sprite
 	duckImage = ppm6GetImage("./images/duck.ppm");
 	int w = duckImage->width;
 	int h = duckImage->height;
+	//added to test
+	//glGenTextures(1, &duckTexture);
 	glBindTexture(GL_TEXTURE_2D, duckTexture);
 	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage->data);
+	//-------------------------------------------------------------------
 	
 	//-------------------------------------------------------------------
+	//duck silhouette 
 	//
+	glBindTexture(GL_TEXTURE_2D, duckSil);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	//
+	////must build a new set of data...
+	unsigned char *silhouetteData = buildAlphaData(duckImage);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+	GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
+	delete [] silhouetteData;
+	//-------------------------------------------------------------------
+	
 	//create opengl texture elements
 	glGenTextures(1, &backgroundTexture);
 	//background
@@ -775,16 +794,19 @@ void render(Game *game)
 			glPushMatrix();
 			glTranslatef(duck_sprite.pos[0], duck_sprite.pos[1], duck_sprite.pos[2]);
 			//implement direction change 
-			/*if (!silhouette) {
-				glBindTexture(GL_TEXTURE_2D, bigfootTexture);
-			} 
-			else {
-				glBindTexture(GL_TEXTURE_2D, silhouetteTexture);
+			//if (show_duck) {
+			//	glBindTexture(GL_TEXTURE_2D, duckTexture);
+			//} 
+		
+			//implement silhouette for the duck
+			if (silhouette) 
+			{
+				glBindTexture(GL_TEXTURE_2D, duckTexture);
 				glEnable(GL_ALPHA_TEST);
 				glAlphaFunc(GL_GREATER, 0.0f);
 				glColor4ub(255,255,255,255);
 			}
-			*/
+			
 			glBegin(GL_QUADS);
 			if (duck_sprite.vel[0] > 0.0) {
 				glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
