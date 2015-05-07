@@ -777,64 +777,70 @@ void render(Game *game)
 			glVertex2f(x+w, y+h);
 			glEnd();
 			d = d->next;
-//		}
-		//duck sprite
-		show_duck= 1;
-		float wid = 50.0f;
-		//float wid = 50.0f;
-		duck_sprite.pos[0] = x;
-		duck_sprite.pos[1] = y;
-		duck_sprite.pos[2] = s->center.z;
-		
-		//duck_sprite.pos[0] = s->center.x;
-		//duck_sprite.pos[1] = s->center.y;
-		//duck_sprite.pos[2] = s->center.z;
-
-		if(show_duck) {
-			glPushMatrix();
-			glTranslatef(duck_sprite.pos[0], duck_sprite.pos[1], duck_sprite.pos[2]);
-			//implement direction change 
-			//if (show_duck) {
-			//	glBindTexture(GL_TEXTURE_2D, duckTexture);
-			//} 
-		
-			//implement silhouette for the duck
-			if (silhouette) 
-			{
-				glBindTexture(GL_TEXTURE_2D, duckTexture);
-				glEnable(GL_ALPHA_TEST);
-				glAlphaFunc(GL_GREATER, 0.0f);
-				glColor4ub(255,255,255,255);
-			}
+		//}
+			//duck sprite
+			show_duck= 1;
+			float wid = 50.0f;
+			//float wid = 50.0f;
+			duck_sprite.pos[0] = x;
+			duck_sprite.pos[1] = y;
+			duck_sprite.pos[2] = s->center.z;
 			
-			glBegin(GL_QUADS);
-			if (duck_sprite.vel[0] > 0.0) {
-				glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
-				glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
-				glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
-				glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
-			} else {
-				glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
-				glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
-				glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
-				glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
-			}
-			glEnd();
-			glPopMatrix();
-			/*
-			if (trees && silhouette) {
-				glBindTexture(GL_TEXTURE_2D, forestTransTexture);
+			//duck_sprite.pos[0] = s->center.x;
+			//duck_sprite.pos[1] = s->center.y;
+			//duck_sprite.pos[2] = s->center.z;
+
+			if(show_duck) {
+				glPushMatrix();
+				glTranslatef(duck_sprite.pos[0], duck_sprite.pos[1], duck_sprite.pos[2]);
+				//implement direction change 
+				//if (show_duck) {
+				//	glBindTexture(GL_TEXTURE_2D, duckTexture);
+				//} 
+			
+				//implement silhouette for the duck
+				if (silhouette) 
+				{
+					glBindTexture(GL_TEXTURE_2D, duckTexture);
+					glEnable(GL_ALPHA_TEST);
+					glAlphaFunc(GL_GREATER, 0.0f);
+					glColor4ub(255,255,255,255);
+				}
+				
 				glBegin(GL_QUADS);
-				glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-				glTexCoord2f(0.0f, 0.0f); glVertex2i(0, yres);
-				glTexCoord2f(1.0f, 0.0f); glVertex2i(xres, yres);
-				glTexCoord2f(1.0f, 1.0f); glVertex2i(xres, 0);
+				if (duck_sprite.vel[0] > 0.0) {
+					glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+					glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+					glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+					glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+				} else {
+					glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+					glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+					glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+					glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+				}
 				glEnd();
+				glPopMatrix();
+				/*
+				if (trees && silhouette) {
+					glBindTexture(GL_TEXTURE_2D, forestTransTexture);
+					glBegin(GL_QUADS);
+					glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+					glTexCoord2f(0.0f, 0.0f); glVertex2i(0, yres);
+					glTexCoord2f(1.0f, 0.0f); glVertex2i(xres, yres);
+					glTexCoord2f(1.0f, 1.0f); glVertex2i(xres, 0);
+					glEnd();
+				}
+				*/
+				glDisable(GL_ALPHA_TEST);
 			}
-			*/
-			glDisable(GL_ALPHA_TEST);
-		}
-		
+//Fix these!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/*			
+			glDisable(GL_TEXTURE_2D);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glEnable(GL_BLEND); 
+			glDisable(GL_BLEND);
+*/		
 		}
 	}
 }
