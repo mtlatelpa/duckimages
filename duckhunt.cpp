@@ -777,6 +777,7 @@ void render(Game *game)
 			glVertex2f(x+w, y+h);
 			glEnd();
 			d = d->next;
+//This changes which duck it points to
 		//}
 			//duck sprite
 			show_duck= 1;
@@ -799,9 +800,12 @@ void render(Game *game)
 				//} 
 			
 				//implement silhouette for the duck
-			
+//remove if statement and make
+//a while loop to take in both duck 
+//pointer variables
 				if (silhouette) 
 				{
+//glBind makes the duck texture
 					glBindTexture(GL_TEXTURE_2D, duckTexture);
 					glEnable(GL_ALPHA_TEST);
 					glAlphaFunc(GL_GREATER, 0.0f);
