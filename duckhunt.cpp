@@ -799,6 +799,7 @@ void render(Game *game)
 				//} 
 			
 				//implement silhouette for the duck
+			
 				if (silhouette) 
 				{
 					glBindTexture(GL_TEXTURE_2D, duckTexture);
@@ -835,6 +836,10 @@ void render(Game *game)
 				glDisable(GL_ALPHA_TEST);
 			}
 //Fix these!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//Possible issue when changing duck direction
+//Duck will both change direction since they are the same
+//Pointer variable
+			
 /*			
 			glDisable(GL_TEXTURE_2D);
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
