@@ -65,9 +65,13 @@ struct Sprite {
 	Arr vel;
 };
 Sprite duck_sprite;
+Sprite duck_sprite2;
 Ppmimage *duckImage=NULL;
+Ppmimage *duckImage2=NULL;
 GLuint duckTexture;
+GLuint duckTexture2;
 GLuint duckSil;
+GLuint duckSil2;
 int show_duck = 0;
 int silhouette = 1;
 
@@ -317,18 +321,27 @@ void init_opengl(void)
 	
 	glGenTextures(1, &duckTexture);
 	glGenTextures(1, &duckSil);
+	glGenTextures(1, &duckTexture2);
+	glGenTextures(1, &duckSil2);
 	//-------------------------------------------------------------------
 	//duck sprite
 	duckImage = ppm6GetImage("./images/duck.ppm");
+	duckImage2 = ppm6GetImage("./images/duck2.ppm");
 	int w = duckImage->width;
 	int h = duckImage->height;
+	int w2 = duckImage2->width;
+	int h2 = duckImage2->height;
 	//added to test
 	//glGenTextures(1, &duckTexture);
 	glBindTexture(GL_TEXTURE_2D, duckTexture);
+	glBindTexture(GL_TEXTURE_2D, duckTexture2);
 	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage->data);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, w2, h2, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage2->data);
 	//-------------------------------------------------------------------
 	
 	//-------------------------------------------------------------------
