@@ -65,12 +65,13 @@ struct Sprite {
 	Arr vel;
 };
 Sprite duck_sprite;
-Sprite duck_sprite2;
 Ppmimage *duckImage=NULL;
-Ppmimage *duckImage2=NULL;
 GLuint duckTexture;
-GLuint duckTexture2;
 GLuint duckSil;
+
+Sprite duck_sprite2;
+Ppmimage *duckImage2=NULL;
+GLuint duckTexture2;
 GLuint duckSil2;
 int show_duck = 0;
 int silhouette = 1;
@@ -321,29 +322,41 @@ void init_opengl(void)
 	
 	glGenTextures(1, &duckTexture);
 	glGenTextures(1, &duckSil);
-	glGenTextures(1, &duckTexture2);
-	glGenTextures(1, &duckSil2);
+	//glGenTextures(1, &duckTexture2);
+	//glGenTextures(1, &duckSil2);
 	//-------------------------------------------------------------------
 	//duck sprite
-	duckImage = ppm6GetImage("./images/duck.ppm");
-	duckImage2 = ppm6GetImage("./images/duck2.ppm");
+	duckImage = ppm6GetImage("./images/duck2.ppm");
+	//duckImage2 = ppm6GetImage("./images/duck2.ppm");
 	int w = duckImage->width;
 	int h = duckImage->height;
-	int w2 = duckImage2->width;
-	int h2 = duckImage2->height;
+	//int w2 = duckImage2->width;
+	//int h2 = duckImage2->height;
 	//added to test
 	//glGenTextures(1, &duckTexture);
 	glBindTexture(GL_TEXTURE_2D, duckTexture);
-	glBindTexture(GL_TEXTURE_2D, duckTexture2);
+	//glBindTexture(GL_TEXTURE_2D, duckTexture2);
 	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage->data);
+	//glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	//glTexImage2D(GL_TEXTURE_2D, 0, 3, w2, h2, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage2->data);
+	//-------------------------------------------------------------------
+
+	//duck 2
+	glGenTextures(1, &duckTexture2);
+	glGenTextures(1, &duckSil2);
+	duckImage2 = ppm6GetImage("./images/duck2.ppm");
+	int w2 = duckImage2->width;
+	int h2 = duckImage2->height;
+	glBindTexture(GL_TEXTURE_2D, duckTexture2);
+	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w2, h2, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage2->data);
-	//-------------------------------------------------------------------
-	
+
 	//-------------------------------------------------------------------
 	//duck silhouette 
 	//
@@ -357,6 +370,21 @@ void init_opengl(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
 	GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData);
 	delete [] silhouetteData;
+	//-------------------------------------------------------------------
+	
+	//-------------------------------------------------------------------
+	//duck silhouette 
+	//
+	glBindTexture(GL_TEXTURE_2D, duckSil2);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	//
+	////must build a new set of data...
+	unsigned char *silhouetteData2 = buildAlphaData(duckImage2);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0,
+	GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData2);
+	delete [] silhouetteData2;
 	//-------------------------------------------------------------------
 	
 	//create opengl texture elements
@@ -789,20 +817,20 @@ void render(Game *game)
 			glVertex2f(x+w, y-h);
 			glVertex2f(x+w, y+h);
 			glEnd();
-			d = d->next;
 //This changes which duck it points to
-		//}
-			//duck sprite
+			
 			show_duck= 1;
 			float wid = 50.0f;
-			//float wid = 50.0f;
 			duck_sprite.pos[0] = x;
 			duck_sprite.pos[1] = y;
 			duck_sprite.pos[2] = s->center.z;
+//not changing to second 
+//duck dimensions
+			d = d->next;
+			duck_sprite2.pos[0] = x;
+			duck_sprite2.pos[1] = y;
+			duck_sprite2.pos[2] = s->center.z;
 			
-			//duck_sprite.pos[0] = s->center.x;
-			//duck_sprite.pos[1] = s->center.y;
-			//duck_sprite.pos[2] = s->center.z;
 
 			if(show_duck) {
 				glPushMatrix();
@@ -811,8 +839,7 @@ void render(Game *game)
 				//if (show_duck) {
 				//	glBindTexture(GL_TEXTURE_2D, duckTexture);
 				//} 
-			
-				//implement silhouette for the duck
+//implement silhouette for the duck
 //remove if statement and make
 //a while loop to take in both duck 
 //pointer variables
@@ -837,19 +864,33 @@ void render(Game *game)
 					glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
 					glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
 				}
+				//Duck2
+				glTranslatef(duck_sprite2.pos[0], duck_sprite2.pos[1], duck_sprite2.pos[2]);
+				if (silhouette) 
+				{
+//glBind makes the duck texture
+					glBindTexture(GL_TEXTURE_2D, duckTexture2);
+					glEnable(GL_ALPHA_TEST);
+					glAlphaFunc(GL_GREATER, 0.0f);
+					glColor4ub(255,255,255,255);
+				}
+				
+				glBegin(GL_QUADS);
+				if (duck_sprite2.vel[0] > 0.0) {
+					glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+					glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+					glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+					glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+				} else {
+					glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+					glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+					glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+					glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+				}
+				
+				
 				glEnd();
 				glPopMatrix();
-				/*
-				if (trees && silhouette) {
-					glBindTexture(GL_TEXTURE_2D, forestTransTexture);
-					glBegin(GL_QUADS);
-					glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-					glTexCoord2f(0.0f, 0.0f); glVertex2i(0, yres);
-					glTexCoord2f(1.0f, 0.0f); glVertex2i(xres, yres);
-					glTexCoord2f(1.0f, 1.0f); glVertex2i(xres, 0);
-					glEnd();
-				}
-				*/
 				glDisable(GL_ALPHA_TEST);
 			}
 //Fix these!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
