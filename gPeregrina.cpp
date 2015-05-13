@@ -174,6 +174,8 @@ Ppmimage *backgroundImage = NULL;
 GLuint backgroundTexture;
 int background = 1;
 
+//Gerardo
+//Image for bullet
 Ppmimage *bulletImage = NULL;
 GLuint bulletTexture;
 int bullet = 1;
@@ -332,10 +334,10 @@ void init_opengl(void)
 	//glGenTextures(1, &duckTexture2);
 	//glGenTextures(1, &duckSil2);
 	//-------------------------------------------------------------------
+
 	//bullet
 	bulletImage = ppm6GetImage("./images/bullet.ppm");
-	
-	
+		
 	//-------------------------------------------------------------------
 	//duck sprite
 	duckImage = ppm6GetImage("./images/duck.ppm");
@@ -407,7 +409,8 @@ void init_opengl(void)
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, backgroundImage->width, backgroundImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, backgroundImage->data); 
 	
-	//bullet
+	//Gerardo
+	//bullet textures
 	glGenTextures(1, &bulletTexture);
 	glBindTexture(GL_TEXTURE_2D, bulletTexture);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
@@ -723,11 +726,14 @@ void render(Game *game)
 	Shape *s;
 	//glColor3ub(90,140,90);
 
+	
 	glColor3ub(90, 140, 90);
 	s = &game->box[0];
 	glPushMatrix();
 	glTranslatef(s->center.x, s->center.y, s->center.z);
 	w = s->width;
+	//Gerardo 
+	//Rendering the bullet
 	//for(int i=0;i<3;i++) {
 		if(game->bullets == 1) {
 			glBindTexture(GL_TEXTURE_2D, bulletTexture);
