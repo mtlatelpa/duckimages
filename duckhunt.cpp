@@ -734,6 +734,9 @@ void render(Game *game)
 	//bullet_sprite.pos[0] = 80 - (i * 20);
 //Make 3 if statements for each bullet
 	if (game->bullets <= 3) { 
+//if bullets == 2
+//i = 2
+//i =1
 	    for (int i=0;i<3;i++) {
 		if (game->bullets == 3) {
 		    bullet_sprite.pos[0] = 80 - (i * 20);
