@@ -76,6 +76,10 @@ GLuint duckSil2;
 int show_duck = 0;
 int silhouette = 1;
 
+Sprite bullet_sprite;
+Ppmimage *bulletImage=NULL;
+GLuint bulletTexture;
+
 struct Duck
 {
 	Shape s;
@@ -171,9 +175,6 @@ Ppmimage *backgroundImage = NULL;
 GLuint backgroundTexture;
 int background = 1;
 
-Ppmimage *bulletImage = NULL;
-GLuint bulletTexture;
-int bullet = 1;
 
 int main(void)
 {
@@ -329,9 +330,17 @@ void init_opengl(void)
 	//glGenTextures(1, &duckTexture2);
 	//glGenTextures(1, &duckSil2);
 	//-------------------------------------------------------------------
-	//bullet
-	bulletImage = ppm6GetImage("./images/bullet.ppm");
 	
+	//bullet
+	glGenTextures(1, &bulletTexture);
+	bulletImage = ppm6GetImage("./images/bullet.ppm");
+	int w3 = bulletImage->width;
+	int h3 = bulletImage->height;
+	glBindTexture(GL_TEXTURE_2D, bulletTexture);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, w3, h3, 0, GL_RGB, GL_UNSIGNED_BYTE, bulletImage->data);
 	
 	//-------------------------------------------------------------------
 	//duck sprite
@@ -395,7 +404,6 @@ void init_opengl(void)
 	GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData2);
 	delete [] silhouetteData2;
 	//-------------------------------------------------------------------
-	
 	//create opengl texture elements
 	glGenTextures(1, &backgroundTexture);
 	//background
@@ -404,13 +412,8 @@ void init_opengl(void)
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, backgroundImage->width, backgroundImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, backgroundImage->data); 
 	
-	//bullet
-	glGenTextures(1, &bulletTexture);
-	glBindTexture(GL_TEXTURE_2D, bulletTexture);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, bulletImage->width, bulletImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, bulletImage->data); 
-	
+	//-------------------------------------------------------------------
+
 	//Set the screen background color
 	//glClearColor(0.1, 0.1, 0.1, 1.0);
 	glEnable(GL_TEXTURE_2D);
@@ -720,26 +723,110 @@ void render(Game *game)
 	Shape *s;
 	//glColor3ub(90,140,90);
 
+
+//Displaying bullets
 	glColor3ub(90, 140, 90);
 	s = &game->box[0];
 	glPushMatrix();
 	glTranslatef(s->center.x, s->center.y, s->center.z);
 	w = s->width;
-	//for(int i=0;i<3;i++) {
-		if(game->bullets == 1) {
-			glBindTexture(GL_TEXTURE_2D, bulletTexture);
-			glBegin(GL_QUADS);
-			glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
-			glTexCoord2f(0.0f, 0.0f); glVertex2i(0, 20);
-			glTexCoord2f(1.0f, 0.0f); glVertex2i(20, 20);
-			glTexCoord2f(1.0f, 1.0f); glVertex2i(20, 0);
-			glEnd();
-		}
-
-	//}
-
-
 	h = s->height;
+	//bullet_sprite.pos[0] = 80 - (i * 20);
+//Make 3 if statements for each bullet
+	if (game->bullets <= 3) { 
+	    for (int i=0;i<3;i++) {
+		if (game->bullets == 3) {
+		    bullet_sprite.pos[0] = 80 - (i * 20);
+		    bullet_sprite.pos[1] = 40;
+		    bullet_sprite.pos[2] = 0;
+		    float wid = 10.0f;
+		    glPushMatrix();
+		    glTranslatef(bullet_sprite.pos[0], bullet_sprite.pos[1], bullet_sprite.pos[2]);
+		    glBindTexture(GL_TEXTURE_2D, bulletTexture);
+		    glEnable(GL_ALPHA_TEST);
+		    glAlphaFunc(GL_GREATER, 0.0f);
+		    glColor4ub(255,255,255,255);
+			
+		    glBegin(GL_QUADS);
+		    if (bullet_sprite.vel[0] > 0.0) {
+			    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+			    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+			    glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+			    glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+		    } else {
+			    glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+			    glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+			    glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+			    glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+		    }
+			    glEnd();
+			    glPopMatrix();
+			    glDisable(GL_ALPHA_TEST);
+		}
+		if (game->bullets == 2) {
+		    for (int i=0;i<2;i++) {
+		    bullet_sprite.pos[0] = 60 - (i * 20);
+		    bullet_sprite.pos[1] = 40;
+		    bullet_sprite.pos[2] = 0;
+		    float wid = 10.0f;
+		    glPushMatrix();
+		    glTranslatef(bullet_sprite.pos[0], bullet_sprite.pos[1], bullet_sprite.pos[2]);
+		    glBindTexture(GL_TEXTURE_2D, bulletTexture);
+		    glEnable(GL_ALPHA_TEST);
+		    glAlphaFunc(GL_GREATER, 0.0f);
+		    glColor4ub(255,255,255,255);
+			
+		    glBegin(GL_QUADS);
+		    if (bullet_sprite.vel[0] > 0.0) {
+			    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+			    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+			    glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+			    glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+		    } else {
+			    glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+			    glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+			    glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+			    glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+		    }
+			    glEnd();
+			    glPopMatrix();
+			    glDisable(GL_ALPHA_TEST);
+		    }
+		}
+		if (game->bullets == 1) {
+		    for (int i=0;i<1;i++) {
+		    bullet_sprite.pos[0] = 40 - (i * 20);
+		    bullet_sprite.pos[1] = 40;
+		    bullet_sprite.pos[2] = 0;
+		    float wid = 10.0f;
+		    glPushMatrix();
+		    glTranslatef(bullet_sprite.pos[0], bullet_sprite.pos[1], bullet_sprite.pos[2]);
+		    glBindTexture(GL_TEXTURE_2D, bulletTexture);
+		    glEnable(GL_ALPHA_TEST);
+		    glAlphaFunc(GL_GREATER, 0.0f);
+		    glColor4ub(255,255,255,255);
+			
+		    glBegin(GL_QUADS);
+		    if (bullet_sprite.vel[0] > 0.0) {
+			    glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+			    glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+			    glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+			    glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+		    } else {
+			    glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+			    glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+			    glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+			    glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+		    }
+			    glEnd();
+			    glPopMatrix();
+			    glDisable(GL_ALPHA_TEST);
+		    }
+			
+		}
+	    }
+	}
+
 	r.bot = s->height;
 	r.left = s->width;
 	glVertex2i(-w, -h);
@@ -747,7 +834,7 @@ void render(Game *game)
 	glVertex2i(w, h);
 	glVertex2i(w, -h);
 	glEnd();
-	ggprint16(&r , 16, 0x00ffffff, "%i", game->bullets);
+	//ggprint16(&r , 16, 0x00ffffff, "%i", game->bullets);
 	glPopMatrix();
 
 	glColor3ub(90, 140, 90);
