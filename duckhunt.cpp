@@ -171,6 +171,10 @@ Ppmimage *backgroundImage = NULL;
 GLuint backgroundTexture;
 int background = 1;
 
+Ppmimage *bulletImage = NULL;
+GLuint bulletTexture;
+int bullet = 1;
+
 int main(void)
 {
 	int done=0;
@@ -325,8 +329,13 @@ void init_opengl(void)
 	//glGenTextures(1, &duckTexture2);
 	//glGenTextures(1, &duckSil2);
 	//-------------------------------------------------------------------
+	//bullet
+	bulletImage = ppm6GetImage("./images/bullet.ppm");
+	
+	
+	//-------------------------------------------------------------------
 	//duck sprite
-	duckImage = ppm6GetImage("./images/duck3.ppm");
+	duckImage = ppm6GetImage("./images/duck.ppm");
 	//duckImage2 = ppm6GetImage("./images/duck2.ppm");
 	int w = duckImage->width;
 	int h = duckImage->height;
@@ -391,10 +400,17 @@ void init_opengl(void)
 	glGenTextures(1, &backgroundTexture);
 	//background
 	glBindTexture(GL_TEXTURE_2D, backgroundTexture);
-	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, backgroundImage->width, backgroundImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, backgroundImage->data); 
+	
+	//bullet
+	glGenTextures(1, &bulletTexture);
+	glBindTexture(GL_TEXTURE_2D, bulletTexture);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, bulletImage->width, bulletImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, bulletImage->data); 
+	
 	//Set the screen background color
 	//glClearColor(0.1, 0.1, 0.1, 1.0);
 	glEnable(GL_TEXTURE_2D);
@@ -709,6 +725,20 @@ void render(Game *game)
 	glPushMatrix();
 	glTranslatef(s->center.x, s->center.y, s->center.z);
 	w = s->width;
+	//for(int i=0;i<3;i++) {
+		if(game->bullets == 1) {
+			glBindTexture(GL_TEXTURE_2D, bulletTexture);
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+			glTexCoord2f(0.0f, 0.0f); glVertex2i(0, 20);
+			glTexCoord2f(1.0f, 0.0f); glVertex2i(20, 20);
+			glTexCoord2f(1.0f, 1.0f); glVertex2i(20, 0);
+			glEnd();
+		}
+
+	//}
+
+
 	h = s->height;
 	r.bot = s->height;
 	r.left = s->width;
