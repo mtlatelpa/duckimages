@@ -183,7 +183,13 @@ void check_resize(XEvent *e);
 Ppmimage *backgroundImage = NULL;
 GLuint backgroundTexture;
 int background = 1;
-
+//Transparent background
+Ppmimage *backgroundTransImage = NULL;
+Ppmimage *gameoverbgImage = NULL;
+GLuint backgroundTransTexture;
+GLuint gameoverbgTexture;
+int trees = 1;
+bool gameover = false;
 
 int main(void)
 {
@@ -317,7 +323,11 @@ void init_opengl(void)
 	//clear the screen
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	backgroundImage = ppm6GetImage("./images/background.ppm");
+	backgroundTransImage = ppm6GetImage("./images/backgroundTrans.ppm");
+    gameoverbgImage = ppm6GetImage("./images/gameoverbg.ppm");
 	
+
+
 	//-------------------------------------------------------------------
 	//bullet
 	glGenTextures(1, &bulletTexture);
@@ -408,7 +418,7 @@ void init_opengl(void)
 	GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData2);
 	delete [] silhouetteData2;
 	//-------------------------------------------------------------------
-	
+
 	//-------------------------------------------------------------------
 	//background textures
 	//create opengl texture elements
@@ -419,8 +429,30 @@ void init_opengl(void)
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, backgroundImage->width, backgroundImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, backgroundImage->data); 
 	//-------------------------------------------------------------------
 
-	//Set the screen background color
-	//glClearColor(0.1, 0.1, 0.1, 1.0);
+	//-------------------------------------------------------------------
+//No genTextures for trans image?
+	//forest transparent part
+	glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    //must build a new set of data...
+    int w6 = backgroundTransImage->width;
+    int h6 = backgroundTransImage->height;
+    unsigned char *ftData = buildAlphaData(backgroundTransImage);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w6, h6, 0, GL_RGBA, GL_UNSIGNED_BYTE, ftData);
+    delete [] ftData;
+	//-------------------------------------------------------------------
+    
+	//-------------------------------------------------------------------
+    //gameover
+	glGenTextures(1, &gameoverbgTexture);
+    glBindTexture(GL_TEXTURE_2D, gameoverbgTexture);
+    //
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, 3, gameoverbgImage->width, gameoverbgImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, gameoverbgImage->data);
+    //-------------------------------------------------------------------
+
 	glEnable(GL_TEXTURE_2D);
 	initialize_fonts();
 }
@@ -689,11 +721,6 @@ void render(Game *game)
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	//WINDOW HEIGHT??
-	//draw a quad with texture
-	//float wid = 120.0f;
-	//glColor3f(1.0,1.0,1.0);
-
 	if(background) {
 		glBindTexture(GL_TEXTURE_2D, backgroundTexture);
 		glBegin(GL_QUADS);
@@ -703,6 +730,18 @@ void render(Game *game)
 		glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
 		glEnd();
 	}
+	//Transparent Background
+//-----------------------------------------------------------------------------------
+//Gameover variable goes on forever
+	if(gameover) {
+        glBindTexture(GL_TEXTURE_2D, gameoverbgTexture);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+        glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+        glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+        glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+        glEnd();
+    }
 
 	glDisable(GL_TEXTURE_2D);
 	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
@@ -716,18 +755,13 @@ void render(Game *game)
 	glVertex2f(WINDOW_WIDTH, game->floor);
 	glEnd();
 
-	//GERARDO
-	//Printing text in Boxes
 	Rect r;
-	//  glClear(GL_COLOR_BUFFER_BIT);
 	r.bot = WINDOW_HEIGHT - 550;
 	r.left = WINDOW_WIDTH - 715;
 	r.center = 0;
 
 	//Drawing Boxes
 	Shape *s;
-	//glColor3ub(90,140,90);
-
 
 	//-------------------------------------------------------------------
 	//Displaying bullets
@@ -933,6 +967,7 @@ void render(Game *game)
 			}
 			game->oneDuck = false;
 			game->twoDuck = false;
+			gameover = true;
 			std::cout << "GAME OVER" << std::endl;
 		}
 		if(!d && game->oneDuck && game->duckCount < 10)
@@ -1031,10 +1066,20 @@ void render(Game *game)
 					glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
 					glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
 				}
-				
-				
 				glEnd();
 				glPopMatrix();
+				
+				//Transparent part
+				if (trees && silhouette) {
+                    glBindTexture(GL_TEXTURE_2D, backgroundTransTexture);
+                    glBegin(GL_QUADS);
+                    glTexCoord2f(0.0f, 1.0f); glVertex2i(0, 0);
+                    glTexCoord2f(0.0f, 0.0f); glVertex2i(0, WINDOW_HEIGHT);
+                    glTexCoord2f(1.0f, 0.0f); glVertex2i(WINDOW_WIDTH, WINDOW_HEIGHT);
+                    glTexCoord2f(1.0f, 1.0f); glVertex2i(WINDOW_WIDTH, 0);
+                    glEnd();
+                }
+
 				glDisable(GL_ALPHA_TEST);
 			}
 //Fix these!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
