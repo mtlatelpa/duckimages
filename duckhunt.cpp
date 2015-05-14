@@ -619,7 +619,8 @@ int check_keys(XEvent *e, Game *game)
 			{
 				deleteDuck(game, d);
 				d = d->next;
-			}	
+			}
+			gameover = false;
 			game->rounds = 1;
 			game->duckCount = 0;
 			game->duckShot = 0;
@@ -640,7 +641,8 @@ int check_keys(XEvent *e, Game *game)
 			{
 				deleteDuck(game, d);
 				d = d->next;
-			}	
+			}
+			gameover = false;
 			game->rounds = 1;
 			game->duckCount = 0;
 			game->duckShot = 0;
