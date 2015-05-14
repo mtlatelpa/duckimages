@@ -64,21 +64,30 @@ struct Sprite {
 	Arr pos;
 	Arr vel;
 };
+//First Duck Sprite
 Sprite duck_sprite;
 Ppmimage *duckImage=NULL;
 GLuint duckTexture;
 GLuint duckSil;
-
+//Second Duck Sprite
 Sprite duck_sprite2;
 Ppmimage *duckImage2=NULL;
 GLuint duckTexture2;
 GLuint duckSil2;
 int show_duck = 0;
 int silhouette = 1;
-
+//Bullet Sprite
 Sprite bullet_sprite;
 Ppmimage *bulletImage=NULL;
 GLuint bulletTexture;
+//White duck Sprite
+Sprite duckscore_sprite;
+Ppmimage *duckscoreImage=NULL;
+GLuint duckscoreTexture;
+//Red duck sprite
+Sprite duckscore_sprite2;
+Ppmimage *duckscoreImage2=NULL;
+GLuint duckscoreTexture2;
 
 struct Duck
 {
@@ -283,23 +292,7 @@ unsigned char *buildAlphaData(Ppmimage *img) {
 		*(ptr+0) = a;
 		*(ptr+1) = b;
 		*(ptr+2) = c;
-		//
-		//get the alpha value
-		//
-		//original code
-		//get largest color component...
-		//*(ptr+3) = (unsigned char)((
-		//      (int)*(ptr+0) +
-		//      (int)*(ptr+1) +
-		//      (int)*(ptr+2)) / 3);
-		//d = a;
-		//if (b >= a && b >= c) d = b;
-		//if (c >= a && c >= b) d = c;
-		//*(ptr+3) = d;
-		//
-		//new code, suggested by Chris Smith, Fall 2013
 		*(ptr+3) = (a|b|c);
-		//
 		ptr += 4;
 		data += 3;
 	}
@@ -325,12 +318,7 @@ void init_opengl(void)
 	glClearColor(1.0, 1.0, 1.0, 1.0);
 	backgroundImage = ppm6GetImage("./images/background.ppm");
 	
-	glGenTextures(1, &duckTexture);
-	glGenTextures(1, &duckSil);
-	//glGenTextures(1, &duckTexture2);
-	//glGenTextures(1, &duckSil2);
 	//-------------------------------------------------------------------
-	
 	//bullet
 	glGenTextures(1, &bulletTexture);
 	bulletImage = ppm6GetImage("./images/bullet.ppm");
@@ -341,29 +329,50 @@ void init_opengl(void)
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w3, h3, 0, GL_RGB, GL_UNSIGNED_BYTE, bulletImage->data);
+	//-------------------------------------------------------------------
+	
+	//-------------------------------------------------------------------
+	//White duck score sprite	
+	glGenTextures(1, &duckscoreTexture);
+	duckscoreImage = ppm6GetImage("./images/duck_score_1.ppm");
+	int w4 = duckscoreImage->width;
+	int h4 = duckscoreImage->height;
+	glBindTexture(GL_TEXTURE_2D, duckscoreTexture);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, w4, h4, 0, GL_RGB, GL_UNSIGNED_BYTE, duckscoreImage->data);
+	//-------------------------------------------------------------------
+	
+	//-------------------------------------------------------------------
+	//Red duck score sprite	
+	glGenTextures(1, &duckscoreTexture2);
+	duckscoreImage2 = ppm6GetImage("./images/duck_score_2.ppm");
+	int w5 = duckscoreImage2->width;
+	int h5 = duckscoreImage2->height;
+	glBindTexture(GL_TEXTURE_2D, duckscoreTexture2);
+	//
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, w5, h5, 0, GL_RGB, GL_UNSIGNED_BYTE, duckscoreImage2->data);
+	//-------------------------------------------------------------------
 	
 	//-------------------------------------------------------------------
 	//duck sprite
+	glGenTextures(1, &duckTexture);
+	glGenTextures(1, &duckSil);
 	duckImage = ppm6GetImage("./images/duck.ppm");
-	//duckImage2 = ppm6GetImage("./images/duck2.ppm");
 	int w = duckImage->width;
 	int h = duckImage->height;
-	//int w2 = duckImage2->width;
-	//int h2 = duckImage2->height;
-	//added to test
-	//glGenTextures(1, &duckTexture);
 	glBindTexture(GL_TEXTURE_2D, duckTexture);
-	//glBindTexture(GL_TEXTURE_2D, duckTexture2);
 	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage->data);
-	//glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	//glTexImage2D(GL_TEXTURE_2D, 0, 3, w2, h2, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage2->data);
 	//-------------------------------------------------------------------
-
-	//duck 2
+	
+	//-------------------------------------------------------------------
+	//duck sprite 2
 	glGenTextures(1, &duckTexture2);
 	glGenTextures(1, &duckSil2);
 	duckImage2 = ppm6GetImage("./images/duck2.ppm");
@@ -374,15 +383,13 @@ void init_opengl(void)
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, w2, h2, 0, GL_RGB, GL_UNSIGNED_BYTE, duckImage2->data);
+	//-------------------------------------------------------------------
 
 	//-------------------------------------------------------------------
 	//duck silhouette 
-	//
 	glBindTexture(GL_TEXTURE_2D, duckSil);
-	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	//
 	////must build a new set of data...
 	unsigned char *silhouetteData = buildAlphaData(duckImage);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
@@ -391,27 +398,25 @@ void init_opengl(void)
 	//-------------------------------------------------------------------
 	
 	//-------------------------------------------------------------------
-	//duck silhouette 
-	//
+	//duck silhouette 2 
 	glBindTexture(GL_TEXTURE_2D, duckSil2);
-	//
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
-	//
 	////must build a new set of data...
 	unsigned char *silhouetteData2 = buildAlphaData(duckImage2);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0,
 	GL_RGBA, GL_UNSIGNED_BYTE, silhouetteData2);
 	delete [] silhouetteData2;
 	//-------------------------------------------------------------------
+	
+	//-------------------------------------------------------------------
+	//background textures
 	//create opengl texture elements
 	glGenTextures(1, &backgroundTexture);
-	//background
 	glBindTexture(GL_TEXTURE_2D, backgroundTexture);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, backgroundImage->width, backgroundImage->height, 0, GL_RGB, GL_UNSIGNED_BYTE, backgroundImage->data); 
-	
 	//-------------------------------------------------------------------
 
 	//Set the screen background color
@@ -724,14 +729,14 @@ void render(Game *game)
 	//glColor3ub(90,140,90);
 
 
-//Displaying bullets
+	//-------------------------------------------------------------------
+	//Displaying bullets
 	glColor3ub(90, 140, 90);
 	s = &game->box[0];
 	glPushMatrix();
 	glTranslatef(s->center.x, s->center.y, s->center.z);
 	w = s->width;
 	h = s->height;
-	//Bullet Images
 	int num = 0, dist = 0;
 	if (game->bullets == 3) {
 		num = 3, dist = 80;
@@ -784,12 +789,87 @@ void render(Game *game)
 	//ggprint16(&r , 16, 0x00ffffff, "%i", game->bullets);
 	glPopMatrix();
 
+	//-------------------------------------------------------------------
+	//Displaying duck score sprites
 	glColor3ub(90, 140, 90);
 	s = &game->box[1];
 	glPushMatrix();
 	glTranslatef(s->center.x, s->center.y, s->center.z);
 	w = s->width;
 	h = s->height;
+	//Duck score sprites
+	if (game->duckShot <= 10) {
+		for (int i=0;i<=9;i++) {
+			duckscore_sprite.pos[0] = 70 + (i * 25);
+			duckscore_sprite.pos[1] = 42;
+			duckscore_sprite.pos[2] = 0;
+			float wid = 10.0f;
+			glPushMatrix();
+			glTranslatef(duckscore_sprite.pos[0], duckscore_sprite.pos[1], duckscore_sprite.pos[2]);
+			glBindTexture(GL_TEXTURE_2D, duckscoreTexture);
+			glEnable(GL_ALPHA_TEST);
+			glAlphaFunc(GL_GREATER, 0.0f);
+			glColor4ub(255,255,255,255);
+			glBegin(GL_QUADS);
+			if (duckscore_sprite.vel[0] > 0.0) {
+				glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+				glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+				glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+				glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+			} else {
+				glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+				glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+				glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+				glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+			}
+			glEnd();
+			glPopMatrix();
+			glDisable(GL_ALPHA_TEST);
+		}
+	}
+	int loop = 0;
+	if (game->duckShot == 1) loop = 1;
+	if (game->duckShot == 2) loop = 2;
+	if (game->duckShot == 3) loop = 3;
+	if (game->duckShot == 4) loop = 4;
+	if (game->duckShot == 5) loop = 5;
+	if (game->duckShot == 6) loop = 6;
+	if (game->duckShot == 7) loop = 7;
+	if (game->duckShot == 8) loop = 8;
+	if (game->duckShot == 9) loop = 9;
+	if (game->duckShot == 10) loop = 10;
+	if (game->duckShot <= 9) {
+		for (int i=0;i<loop;i++) {
+			duckscore_sprite2.pos[0] = 70 + (i * 25);
+			duckscore_sprite2.pos[1] = 42;
+			duckscore_sprite2.pos[2] = 0;
+			float wid = 10.0f;
+			glPushMatrix();
+			glTranslatef(duckscore_sprite2.pos[0], duckscore_sprite2.pos[1], duckscore_sprite2.pos[2]);
+			glBindTexture(GL_TEXTURE_2D, duckscoreTexture2);
+			glEnable(GL_ALPHA_TEST);
+			glAlphaFunc(GL_GREATER, 0.0f);
+			glColor4ub(255,255,255,255);
+			glBegin(GL_QUADS);
+			if (duckscore_sprite2.vel[0] > 0.0) {
+				glTexCoord2f(0.0f, 1.0f); glVertex2i(-wid,-wid);
+				glTexCoord2f(0.0f, 0.0f); glVertex2i(-wid, wid);
+				glTexCoord2f(1.0f, 0.0f); glVertex2i( wid, wid);
+				glTexCoord2f(1.0f, 1.0f); glVertex2i( wid,-wid);
+			} else {
+				glTexCoord2f(1.0f, 1.0f); glVertex2i(-wid,-wid);
+				glTexCoord2f(1.0f, 0.0f); glVertex2i(-wid, wid);
+				glTexCoord2f(0.0f, 0.0f); glVertex2i( wid, wid);
+				glTexCoord2f(0.0f, 1.0f); glVertex2i( wid,-wid);
+			}
+			glEnd();
+			glPopMatrix();
+			glDisable(GL_ALPHA_TEST);
+		}
+	}
+	
+
+	
 	r.bot = s->height;
 	r.left = s->width;
 	glVertex2i(-w, -h);
@@ -797,7 +877,7 @@ void render(Game *game)
 	glVertex2i(w, h);
 	glVertex2i(w, -h);
 	glEnd();
-	ggprint16(&r , 16, 0x00ffffff, "%i", game->duckShot);
+	//ggprint16(&r , 16, 0x00ffffff, "%i", game->duckShot);
 	glPopMatrix();
 
 	glColor3ub(90, 140, 90);
