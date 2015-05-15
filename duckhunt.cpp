@@ -26,6 +26,14 @@ extern "C"
 #include "fonts.h"
 }
 
+
+#define USE_SOUND
+#ifdef USE_SOUND
+#include <FMOD/fmod.h>
+#include <FMOD/wincompat.h>
+#include "fmod.h"
+#endif //USE_SOUND
+
 //X Windows variables
 Display *dpy;
 Window win;
@@ -179,6 +187,8 @@ void render(Game *game);
 void makeDuck(Game *game);
 void deleteDuck(Game *game, Duck *duck);
 void check_resize(XEvent *e);
+void init_sounds(void);
+
 
 Ppmimage *backgroundImage = NULL;
 GLuint backgroundTexture;
@@ -197,6 +207,7 @@ int main(void)
 	srand(time(NULL));
 	initXWindows();
 	init_opengl();
+	init_sounds();
 
 	clock_gettime(CLOCK_REALTIME, &timePause);
 	clock_gettime(CLOCK_REALTIME, &timeStart);
@@ -226,6 +237,9 @@ int main(void)
 	}
 	cleanupXWindows();
 	cleanup_fonts();
+	#ifdef USE_SOUND
+	fmod_cleanup();
+	#endif //USE_SOUND
 	return 0;
 }
 
@@ -523,6 +537,8 @@ void check_mouse(XEvent *e, Game *game)
 	}
 	if (e->type == ButtonPress) {
 		if (e->xbutton.button==1) {
+			#ifdef USE_SOUND
+			fmod_playsound(0);
 			//Left button was pressed
 			while(d)
 			{	
@@ -546,6 +562,7 @@ void check_mouse(XEvent *e, Game *game)
 						y <= d->s.center.y + d->s.height &&
 						y >= d->s.center.y - d->s.height)
 				{
+					fmod_playsound(1);
 					ts = timeDiff(&d->time, &dt);
 					if(ts < 1.5)
 						game->score += 200;
@@ -568,6 +585,7 @@ void check_mouse(XEvent *e, Game *game)
 							y <= d->s.center.y + d->s.height &&
 							y >= d->s.center.y - d->s.height)
 					{
+						fmod_playsound(1);
 						ts = timeDiff(&d->time, &dt);
 						if(ts < 1.5)
 							game->score += 200;
@@ -596,6 +614,7 @@ void check_mouse(XEvent *e, Game *game)
 				d = d->next;
 			}
 		}
+	#endif
 	}
 	if (e->xbutton.button==3) {
 		//Right button was pressed
@@ -1129,3 +1148,26 @@ void deleteDuck(Game *game, Duck *node)
 	node = NULL;
 	game->n--;
 }
+
+void init_sounds(void)
+{
+    #ifdef USE_SOUND
+    //FMOD_RESULT result;
+    if (fmod_init()) {
+        std::cout << "ERROR - fmod_init()\n" << std::endl;
+        return;
+    }
+    if (fmod_createsound((char *)"./sounds/gunshot.wav", 0)) {
+        std::cout << "ERROR - fmod_createsound()\n" << std::endl;
+        return;
+    }
+    if (fmod_createsound((char *)"./sounds/drip.mp3", 1)) {
+        std::cout << "ERROR - fmod_createsound()\n" << std::endl;
+        return;
+    }
+    fmod_setmode(0,FMOD_LOOP_OFF);
+    //fmod_playsound(0);
+    //fmod_systemupdate();
+    #endif //USE_SOUND
+}
+
