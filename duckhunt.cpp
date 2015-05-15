@@ -793,6 +793,8 @@ void render(Game *game)
 	w = s->width;
 	h = s->height;
 	int num = 0, dist = 0;
+//Make the values coincide with the WINDOW_WIDTH and WINDOW_HEIGHT
+//by changing the dist
 	if (game->bullets == 3) {
 		num = 3, dist = 80;
 	}
