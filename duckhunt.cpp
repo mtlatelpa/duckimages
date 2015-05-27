@@ -1723,6 +1723,12 @@ void render(Game *game)
 			h = d->s.height;
 			x = d->s.center.x;
 			y = d->s.center.y;
+			/*glBegin(GL_QUADS);
+			glVertex2f(x-w, y+h);
+			glVertex2f(x-w, y-h);
+			glVertex2f(x+w, y-h);
+			glVertex2f(x+w, y+h);
+			glEnd();*/
 			show_duck= 1;
 			float wid = 50.0f;
 			duck_sprite.pos[0] = x;
@@ -1738,9 +1744,11 @@ void render(Game *game)
 			if(show_duck) {
 				glPushMatrix();
 				glTranslatef(duck_sprite.pos[0], duck_sprite.pos[1], duck_sprite.pos[2]);
-				if (silhouette) 
+				if (!silhouette) 
 				{
 					glBindTexture(GL_TEXTURE_2D, duckTexture);
+				} else {
+					glBindTexture(GL_TEXTURE_2D, duckSil);
 					glEnable(GL_ALPHA_TEST);
 					glAlphaFunc(GL_GREATER, 0.0f);
 					glColor4ub(255,255,255,255);
@@ -1775,6 +1783,7 @@ void render(Game *game)
 		}
 		
 		//----------------------------------------------------
+		duck_sprite3.pos[0] = s->center.x;
 		glColor3ub(255, 0, 0);
 		while(dd)
 		{
@@ -1783,6 +1792,12 @@ void render(Game *game)
 			h = dd->s.height;
 			x = dd->s.center.x;
 			y = dd->s.center.y;
+			/*glBegin(GL_QUADS);
+			glVertex2f(x-w, y+h);
+			glVertex2f(x-w, y-h);
+			glVertex2f(x+w, y-h);
+			glVertex2f(x+w, y+h);
+			glEnd();*/
 			r.bot = y + h;
 			r.left = x - (w/2);
 			if(ts < 0.3)
@@ -1792,24 +1807,21 @@ void render(Game *game)
 				else
 					ggprint16(&r , 16, 0x00ffffff, "100");
 			}
+			dd = dd->next;
 			show_duck= 1;
 			float wid = 50.0f;
 			duck_sprite3.pos[0] = x;
 			duck_sprite3.pos[1] = y;
 			duck_sprite3.pos[2] = s->center.z;
-			
-			dd = dd->next;
-			duck_sprite4.pos[0] = x;
-			duck_sprite4.pos[1] = y;
-			duck_sprite4.pos[2] = s->center.z;
-			
 
 			if(show_duck) {
 				glPushMatrix();
 				glTranslatef(duck_sprite3.pos[0], duck_sprite3.pos[1], duck_sprite3.pos[2]);
-				if (silhouette) 
+				if (!silhouette) 
 				{
 					glBindTexture(GL_TEXTURE_2D, duckTexture3);
+				} else {
+					glBindTexture(GL_TEXTURE_2D, duckSil3);
 					glEnable(GL_ALPHA_TEST);
 					glAlphaFunc(GL_GREATER, 0.0f);
 					glColor4ub(255,255,255,255);
@@ -1843,6 +1855,7 @@ void render(Game *game)
 			}
 		}
 
+		duck_sprite5.pos[0] = s->center.x;
 		glColor3ub(0, 0, 255);
 		while(fd)
 		{
@@ -1850,12 +1863,12 @@ void render(Game *game)
 			h = fd->s.height;
 			x = fd->s.center.x;
 			y = fd->s.center.y;
-			glBegin(GL_QUADS);
+			/*glBegin(GL_QUADS);
 			glVertex2f(x-w, y+h);
 			glVertex2f(x-w, y-h);
 			glVertex2f(x+w, y-h);
 			glVertex2f(x+w, y+h);
-			glEnd();
+			glEnd();*/
 			fd = fd->next;
 			show_duck= 1;
 			float wid = 50.0f;
@@ -1867,9 +1880,11 @@ void render(Game *game)
 			if(show_duck) {
 				glPushMatrix();
 				glTranslatef(duck_sprite5.pos[0], duck_sprite5.pos[1], duck_sprite5.pos[2]);
-				if (silhouette) 
+				if (!silhouette) 
 				{
 					glBindTexture(GL_TEXTURE_2D, duckTexture5);
+				} else {
+					glBindTexture(GL_TEXTURE_2D, duckSil5);
 					glEnable(GL_ALPHA_TEST);
 					glAlphaFunc(GL_GREATER, 0.0f);
 					glColor4ub(255,255,255,255);
