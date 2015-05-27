@@ -193,9 +193,10 @@ struct Game {
     laughingDog *ldog;   //////////////////
     float floor;
     struct timespec duckTimer, dogTimer; // <-- dogTimer
-    Shape box[6];
+    Shape box[10];
     bool oneDuck, twoDuck, animateDog, dogGone, afterDog, waitForDog; // <-- animateDog,dogGone,afterDog,waitForDog
-    ~Game()
+    bool menutest;
+	~Game()
     {
         delete duck;
         delete deadD;
@@ -227,6 +228,8 @@ struct Game {
         dogGone = true;  /////////////////////
         afterDog = false;  ////////////////////////
         waitForDog = true;  ///////////////////////
+		
+		menutest = true;
 
         //bullet
         box[0].width = 45;
@@ -262,6 +265,27 @@ struct Game {
         box[4].center.x = 0;
         box[4].center.y = 0;
         box[4].center.z = 0;
+		
+        box[5].width = 100;
+        box[5].height = 80;
+        box[5].center.x = 110;
+        box[5].center.y = 500;
+        box[5].center.z = 0;
+
+		box[6].width = 100;
+        box[6].height = 80;
+        box[6].center.x = 400;
+        box[6].center.y = 500;
+        box[6].center.z = 0;
+
+		box[7].width = 100;
+        box[7].height = 80;
+        box[7].center.x = 690;
+        box[7].center.y = 500;
+        box[7].center.z = 0;
+
+
+
     }
 };
 
@@ -950,7 +974,8 @@ int check_keys(XEvent *e, Game *game)
         //You may check other keys here.
         if(key == XK_1)
         {
-            while(d)
+            game->menutest = false;
+			while(d)
             {
                 deleteDuck(game, d);
                 d = d->next;
@@ -997,6 +1022,7 @@ int check_keys(XEvent *e, Game *game)
         }
         if(key == XK_2)
         {
+            game->menutest = false;
             while(d)
             {
                 deleteDuck(game, d);
@@ -1319,6 +1345,45 @@ void render(Game *game)
 //-------------------------------------------------------------------
 //Drawing Boxes
 	Shape *s;
+
+	if (game->menutest == true) {
+       const char* text[3] = {"One Duck Hunt", "Two Duct Hunt", "        Exit"}; // the Text need fixing to look better.
+		for(int i=5; i<8; i++) {
+			glColor3ub(90, 140, 90);
+			s = &game->box[i];
+			glPushMatrix();
+			glTranslatef(s->center.x, s->center.y, s->center.z);
+			w = s->width;
+			h = s->height;
+			r.bot = s->height - 75;
+			r.left = s->width - 170;
+			glBegin(GL_QUADS);
+			glVertex2i(-w,-h);
+			glVertex2i(-w, h);
+			glVertex2i( w, h);
+			glVertex2i( w,-h);
+			glEnd();
+			if (i == 5)
+				ggprint16(&r, 35, 0x00ffffff, text[0]);
+			if (i == 6)
+				ggprint16(&r, 35, 0x00ffffff, text[1]);
+			if (i == 7)
+				ggprint16(&r, 35, 0x00ffffff, text[2]);
+			r.bot = s->height - 120;
+			r.left = s->width - 170;
+			if (i == 5)
+				ggprint16(&r, 35, 0x00ffffff, "   Key \" 1 \"");
+			if (i == 6)
+				ggprint16(&r, 35, 0x00ffffff, "   Key \" 2 \"");
+			if (i == 7)
+				ggprint16(&r, 35, 0x00ffffff, "   Key \" Esc \"");
+			glPopMatrix();
+		}
+	}
+
+
+
+
 	
 	//Displaying bullets
 	glColor3ub(90, 140, 90);
