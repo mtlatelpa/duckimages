@@ -1,5 +1,6 @@
 // Jason Thai
 // Gerardo Peregrina
+// Miguel Tlatelpa
 // Duck Hunt
 
 #include <iostream>
@@ -510,7 +511,7 @@ void init_opengl(void)
 	//duck sprite
 	glGenTextures(1, &duckTexture);
 	glGenTextures(1, &duckSil);
-	duckImage = ppm6GetImage("./images/duck.ppm");
+	duckImage = ppm6GetImage("./images/1duck.ppm");
 	int w = duckImage->width;
 	int h = duckImage->height;
 	glBindTexture(GL_TEXTURE_2D, duckTexture);
